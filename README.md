@@ -1,6 +1,6 @@
 # Pulse · 动态广场 ✨
 
-一个**富有设计感**的动态 / 博客展示页面，纯前端实现（HTML / CSS / 原生 JS + Tailwind Play CDN），数据保存在浏览器 `localStorage`，无需后端、无需构建。
+一个动态 / 博客展示页面，纯前端实现（HTML / CSS / 原生 JS + Tailwind Play CDN），数据保存在浏览器 `localStorage`，无需后端、无需构建。
 
 ![light](./pulse-light-final.png)
 
