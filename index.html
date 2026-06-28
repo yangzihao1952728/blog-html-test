@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pulse · 动态广场</title>
+  <meta name="description" content="一个富有设计感的动态 / 博客展示页面 —— 文字、图片、点赞、评论。" />
+
+  <!-- Prevent theme flash: apply saved/preferred theme before paint -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('pulse_theme');
+        if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        if (t === 'dark') document.documentElement.classList.add('dark');
+      } catch (e) { /* localStorage may be unavailable on file:// — degrade silently */ }
+    })();
+  </script>
+
+  <!-- Tailwind CSS (Play CDN — dev/prototype only; see CLAUDE.md) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'PingFang SC', 'Microsoft YaHei', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+              400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+              800: '#3730a3', 900: '#312e81'
+            }
+          },
+          boxShadow: {
+            soft: '0 4px 24px -8px rgba(31, 41, 55, 0.12), 0 2px 6px -2px rgba(31, 41, 55, 0.06)',
+            glow: '0 8px 40px -12px rgba(139, 92, 246, 0.45)'
+          },
+          keyframes: {
+            float: {
+              '0%,100%': { transform: 'translate(0,0) scale(1)' },
+              '50%': { transform: 'translate(20px,-30px) scale(1.08)' }
+            }
+          },
+          animation: { float: 'float 18s ease-in-out infinite' }
+        }
+      }
+    };
+  </script>
+
+  <!-- Reusable component classes (compiled by the Play CDN) -->
+  <style type="text/tailwindcss">
+    @layer components {
+      .card {
+        @apply rounded-3xl border border-slate-200/70 dark:border-white/10
+               bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl shadow-soft
+               transition-all duration-300;
+      }
+      .sidebar-card {
+        @apply rounded-3xl border border-slate-200/70 dark:border-white/10
+               bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl;
+      }
+      .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5
+               font-semibold text-white bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500
+               shadow-glow hover:-translate-y-0.5 active:translate-y-0
+               transition disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0;
+      }
+      .btn-ghost {
+        @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2
+               font-medium text-slate-600 dark:text-slate-300
+               hover:bg-slate-100 dark:hover:bg-white/5 transition;
+      }
+      .icon-btn {
+        @apply inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium
+               text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5
+               transition select-none;
+      }
+      .input-field {
+        @apply w-full rounded-2xl border border-slate-200 dark:border-white/10
+               bg-white/70 dark:bg-slate-900/50 px-4 py-2.5 text-slate-800 dark:text-slate-100
+               placeholder-slate-400 dark:placeholder-slate-500
+               focus:outline-none focus:ring-2 focus:ring-violet-400/60 focus:border-transparent transition;
+      }
+      .chip {
+        @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium
+               bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300;
+      }
+    }
+  </style>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%A8%3C/text%3E%3C/svg%3E" />
+</head>
+
+<body class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased selection:bg-violet-200 selection:text-violet-900">
+
+  <!-- Decorative animated background -->
+  <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div class="blob blob-a"></div>
+    <div class="blob blob-b"></div>
+    <div class="blob blob-c"></div>
+    <div class="grain"></div>
+  </div>
+
+  <!-- ===== Top navigation ===== -->
+  <header class="sticky top-0 z-40 border-b border-slate-200/60 dark:border-white/5 bg-white/70 dark:bg-slate-950/60 backdrop-blur-xl">
+    <div class="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
+      <a href="#" class="flex items-center gap-2.5 group">
+        <span class="grid h-9 w-9 place-items-center rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow-glow group-hover:scale-105 transition">
+          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </span>
+        <span class="text-lg font-extrabold tracking-tight">Pulse<span class="text-violet-500">.</span></span>
+      </a>
+
+      <nav class="ml-2 hidden items-center gap-1 md:flex">
+        <a class="btn-ghost text-violet-600 dark:text-violet-300" href="#">广场</a>
+        <a class="btn-ghost" href="#">关注</a>
+        <a class="btn-ghost" href="#">收藏</a>
+      </nav>
+
+      <div class="ml-auto flex items-center gap-2">
+        <button id="themeToggle" class="icon-btn !px-2.5" title="切换主题" aria-label="切换主题">
+          <svg class="h-5 w-5 hidden dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="h-5 w-5 block dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+        <button id="composeJumpBtn" class="btn-primary hidden sm:inline-flex">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          发布动态
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Main layout ===== -->
+  <main class="mx-auto max-w-7xl px-4 sm:px-6 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_300px] gap-6">
+
+      <!-- Left: current user card (lg+) -->
+      <aside class="hidden lg:block">
+        <div class="sticky top-24 space-y-4">
+          <div id="userCard" class="sidebar-card overflow-hidden"></div>
+          <div class="sidebar-card p-2 text-sm">
+            <a class="flex items-center gap-3 rounded-2xl px-3 py-2.5 hover:bg-slate-100 dark:hover:bg-white/5 transition" href="#">
+              <span class="text-base">🏠</span><span>广场</span>
+            </a>
+            <a class="flex items-center gap-3 rounded-2xl px-3 py-2.5 hover:bg-slate-100 dark:hover:bg-white/5 transition" href="#">
+              <span class="text-base">🔖</span><span>我的收藏</span>
+            </a>
+            <a class="flex items-center gap-3 rounded-2xl px-3 py-2.5 hover:bg-slate-100 dark:hover:bg-white/5 transition" href="#">
+              <span class="text-base">⚙️</span><span>设置</span>
+            </a>
+          </div>
+          <p class="px-2 text-xs leading-relaxed text-slate-400 dark:text-slate-500">
+            Pulse · 一个用纯前端实现的动态广场 Demo，数据保存在本地浏览器。
+          </p>
+        </div>
+      </aside>
+
+      <!-- Center: compose + feed -->
+      <section class="min-w-0 space-y-5">
+        <!-- Compose box -->
+        <div id="composeBox" class="card p-4 sm:p-5">
+          <div class="flex gap-3">
+            <span id="composeAvatar" class="grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-bold text-white ring-2 ring-white dark:ring-slate-800 shadow"></span>
+            <div class="min-w-0 flex-1">
+              <textarea id="composeText" rows="2"
+                class="w-full resize-none bg-transparent text-lg placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
+                placeholder="分享此刻的想法…"></textarea>
+
+              <!-- image previews -->
+              <div id="composePreview" class="hidden flex-wrap gap-2 mt-2"></div>
+
+              <div class="mt-3 flex items-center gap-1 border-t border-slate-100 dark:border-white/5 pt-3">
+                <input id="imageInput" type="file" accept="image/*" multiple class="hidden" />
+                <button id="addImageBtn" type="button" class="icon-btn">
+                  <svg class="h-5 w-5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L5 22"/></svg>
+                  图片
+                </button>
+                <button id="emojiBtn" type="button" class="icon-btn">
+                  <svg class="h-5 w-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>
+                  表情
+                </button>
+
+                <span id="charCount" class="ml-auto mr-2 text-xs tabular-nums text-slate-400">0/500</span>
+                <button id="postBtn" class="btn-primary" disabled>发布</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feed filter chips -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+          <button class="chip filter-chip !bg-violet-600 !text-white" data-filter="all">全部</button>
+          <button class="chip filter-chip" data-filter="text">纯文字</button>
+          <button class="chip filter-chip" data-filter="image">含图片</button>
+          <span class="ml-auto text-xs text-slate-400 dark:text-slate-500 shrink-0">共 <b id="postCount" class="text-slate-600 dark:text-slate-300">0</b> 条动态</span>
+        </div>
+
+        <!-- Feed -->
+        <div id="feed" class="space-y-5">
+          <!-- skeleton -->
+          <div id="skeleton" class="space-y-5">
+            <div class="card p-5">
+              <div class="flex gap-3">
+                <div class="shimmer h-11 w-11 rounded-full"></div>
+                <div class="flex-1 space-y-2 pt-1">
+                  <div class="shimmer h-3.5 w-32 rounded"></div>
+                  <div class="shimmer h-3 w-20 rounded"></div>
+                </div>
+              </div>
+              <div class="shimmer mt-4 h-3 w-full rounded"></div>
+              <div class="shimmer mt-2 h-3 w-4/5 rounded"></div>
+              <div class="shimmer mt-4 h-40 w-full rounded-2xl"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: sidebar (xl+) -->
+      <aside class="hidden xl:block">
+        <div class="sticky top-24 space-y-4">
+          <div class="sidebar-card p-5">
+            <h3 class="mb-3 text-sm font-bold">🔥 热门话题</h3>
+            <ul id="trendingList" class="space-y-3 text-sm"></ul>
+          </div>
+          <div class="sidebar-card p-5">
+            <h3 class="mb-3 text-sm font-bold">✨ 推荐用户</h3>
+            <ul id="suggestList" class="space-y-3"></ul>
+          </div>
+          <div class="px-2 text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+            © Pulse Demo · 用 ❤️ 与纯前端打造
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- Toast container -->
+  <div id="toastWrap" class="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2"></div>
+
+  <!-- Lightbox for images -->
+  <div id="lightbox" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-6">
+    <button id="lightboxClose" class="absolute top-5 right-5 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20 transition">✕</button>
+    <img id="lightboxImg" alt="" class="max-h-[88vh] max-w-[92vw] rounded-2xl object-contain shadow-2xl" />
+  </div>
+
+  <!-- ===== Scripts (order matters: utils → store → ui → app) ===== -->
+  <script src="js/utils.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

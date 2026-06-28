@@ -1,0 +1,19 @@
+{
+  "name": "pulse-feed",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pulse · 动态广场 — a design-rich social feed / blog page (vanilla HTML/CSS/JS + Tailwind Play CDN + localStorage).",
+  "scripts": {
+    "start": "npx --yes serve -l 5173 .",
+    "dev": "npx --yes serve -l 5173 .",
+    "serve:py": "python -m http.server 5173"
+  },
+  "keywords": [
+    "social-feed",
+    "blog",
+    "vanilla-js",
+    "tailwindcss",
+    "demo"
+  ],
+  "license": "MIT"
+}

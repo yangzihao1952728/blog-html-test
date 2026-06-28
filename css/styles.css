@@ -1,0 +1,125 @@
+/* =========================================================
+   Pulse · 动态广场 — custom styles
+   Tailwind handles layout/spacing in index.html; this file
+   holds animations, glass surfaces, background blobs and
+   anything the Play CDN can't express inline.
+   ========================================================= */
+
+/* ---- Decorative background blobs ---- */
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  opacity: 0.55;
+  will-change: transform;
+}
+.blob-a {
+  width: 32rem; height: 32rem; top: -8rem; left: -6rem;
+  background: radial-gradient(circle at 30% 30%, #a78bfa, #6366f1);
+  animation: blobFloat 20s ease-in-out infinite;
+}
+.blob-b {
+  width: 28rem; height: 28rem; top: 10rem; right: -8rem;
+  background: radial-gradient(circle at 30% 30%, #f0abfc, #d946ef);
+  opacity: 0.4;
+  animation: blobFloat 24s ease-in-out infinite reverse;
+}
+.blob-c {
+  width: 26rem; height: 26rem; bottom: -10rem; left: 30%;
+  background: radial-gradient(circle at 30% 30%, #5eead4, #38bdf8);
+  opacity: 0.35;
+  animation: blobFloat 22s ease-in-out infinite;
+}
+:root.dark .blob { opacity: 0.32; }
+:root.dark .blob-b { opacity: 0.24; }
+:root.dark .blob-c { opacity: 0.2; }
+
+/* faint grain overlay for depth */
+.grain {
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  mix-blend-mode: overlay;
+}
+
+@keyframes blobFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, -30px) scale(1.1); }
+  66% { transform: translate(-30px, 25px) scale(0.95); }
+}
+
+/* ---- Custom scrollbar ---- */
+* { scrollbar-width: thin; scrollbar-color: rgba(139,92,246,.4) transparent; }
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(rgba(139,92,246,.45), rgba(217,70,239,.45));
+  border-radius: 9999px; border: 2px solid transparent; background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover { background-clip: padding-box; }
+
+/* ---- Skeleton shimmer ---- */
+.shimmer {
+  background: linear-gradient(100deg,
+    rgba(148,163,184,.16) 30%, rgba(148,163,184,.32) 50%, rgba(148,163,184,.16) 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s infinite;
+}
+:root.dark .shimmer {
+  background: linear-gradient(100deg,
+    rgba(255,255,255,.05) 30%, rgba(255,255,255,.11) 50%, rgba(255,255,255,.05) 70%);
+  background-size: 200% 100%;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ---- Post enter animation ---- */
+.post-enter { animation: fadeUp .45s cubic-bezier(.21,1.02,.73,1) both; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.post-leave { animation: fadeDown .35s ease forwards; }
+@keyframes fadeDown {
+  to { opacity: 0; transform: translateY(-8px) scale(.98); max-height: 0; margin: 0; padding-top: 0; padding-bottom: 0; overflow: hidden; }
+}
+
+/* ---- Heart pop on like ---- */
+.like-btn .heart { transition: transform .2s cubic-bezier(.34,1.56,.64,1); }
+.like-btn.is-liked .heart {
+  color: #f43f5e; fill: #f43f5e;
+  animation: heartPop .42s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.45); }
+  70% { transform: scale(.9); }
+  100% { transform: scale(1); }
+}
+
+/* ---- Comments expand ---- */
+.comments-wrap { overflow: hidden; }
+.comments-inner { animation: expandIn .28s ease both; }
+@keyframes expandIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Toast ---- */
+.toast {
+  animation: toastIn .3s cubic-bezier(.21,1.02,.73,1) both;
+}
+.toast.out { animation: toastOut .3s ease forwards; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes toastOut { to { opacity: 0; transform: translateX(20px); } }
+
+/* ---- Image grid helpers ---- */
+.img-grid img { transition: transform .4s ease, filter .3s ease; }
+.img-grid img:hover { transform: scale(1.03); filter: brightness(1.05); }
+
+/* keep long unbroken strings from blowing layout */
+.break-anywhere { word-break: break-word; overflow-wrap: anywhere; }
+
+/* hide scrollbar on filter row but keep scroll */
+.filter-row::-webkit-scrollbar { height: 0; }
+
+/* nicer focus ring for keyboard users */
+:focus-visible { outline: 2px solid rgba(139,92,246,.6); outline-offset: 2px; border-radius: 8px; }
